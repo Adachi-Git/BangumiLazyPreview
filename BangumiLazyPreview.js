@@ -1,5 +1,6 @@
 // ==UserScript==
 // @name         BangumiLazyPreview
+// @namespace    https://github.com/Adachi-Git/BangumiLazyPreviewLink
 // @version      0.1
 // @description  Lazy load links and show their titles
 // @author      Jirehlov (Original Author), Adachi (Current Author)
