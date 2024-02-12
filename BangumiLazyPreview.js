@@ -1,22 +1,27 @@
 // ==UserScript==
 // @name         BangumiLazyPreview
 // @namespace    https://github.com/Adachi-Git/BangumiLazyPreviewLink
-// @version      0.1
+// @version      0.2
 // @description  Lazy load links and show their titles
 // @author      Jirehlov (Original Author), Adachi (Current Author)
 // @include        /^https?://(bangumi\.tv|bgm\.tv|chii\.in)/.*
 // @grant        none
 // @license      MIT
+// @downloadURL  https://update.greasyfork.org/scripts/487090/BangumiLazyPreviewLink.user.js
+// @updateURL    https://update.greasyfork.org/scripts/487090/BangumiLazyPreviewLink.meta.js
 // ==/UserScript==
 
 (function () {
     'use strict';
 
     let lazyLinks = [];
+    let linkCache = {}; // 存储链接和对应的标题缓存
 
     const replaceLinkText = (link) => {
         const linkURL = link.href;
-        if (link.textContent === link.href) {
+        if (linkCache[linkURL]) { // 检查链接是否在缓存中
+            link.textContent = linkCache[linkURL];
+        } else if (link.textContent === link.href) {
             fetch(linkURL)
                 .then(response => response.text())
                 .then(data => {
@@ -50,6 +55,7 @@
                     }
                     if (titleText) {
                         link.textContent = titleText;
+                        linkCache[linkURL] = titleText; // 将链接和标题添加到缓存中
                     }
                 })
                 .catch(error => {
