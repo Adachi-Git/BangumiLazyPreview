@@ -1,6 +1,6 @@
 # BangumiLazyPreviewLink
 
-BangumiLazyPreviewLink 是一个用户脚本，用于在 Bangumi 网站上预览链接并显示它们的标题。本项目是对原作者 Jirehlov 的脚本 https://bgm.tv/dev/app/2801 进行优化，新增了懒加载功能，以提高性能并改善用户体验。
+BangumiLazyPreviewLink 是一个用户脚本，用于在 Bangumi 网站上预览链接并显示它们的标题。本项目是对原作者 Jirehlov 的脚本 https://bgm.tv/dev/app/2801 进行优化，新增了懒加载和临时缓存功能，以提高性能并改善用户体验。
 
 本脚本分普通版和维基版。正常用户使用普通版即可，维基版面向维基人。
 
