@@ -1,14 +1,13 @@
 // ==UserScript==
-// @name         BangumiLazyPreviewLink
+// @name         BangumiLazyPreviewLinkForWiki
 // @namespace    https://github.com/Adachi-Git/BangumiLazyPreviewLink
-// @version      0.4
+// @version      0.5
 // @description  Lazy load links and show their titles
 // @author       Jirehlov (Original Author), Adachi (Current Author)
 // @include      /^https?://(bangumi\.tv|bgm\.tv|chii\.in)/.*
 // @grant        none
 // @license      MIT
-// @downloadURL  https://update.greasyfork.org/scripts/487090/BangumiLazyPreviewLink.user.js
-// @updateURL    https://update.greasyfork.org/scripts/487090/BangumiLazyPreviewLink.meta.js
+
 // ==/UserScript==
 
 (function () {
@@ -97,5 +96,80 @@
 
     // 设置定时器变量
     let timer;
+
+    // 创建浮动窗口元素
+    const floatingDiv = document.createElement('div');
+    floatingDiv.style.position = 'fixed';
+    floatingDiv.style.top = '50px';
+    floatingDiv.style.left = '50px';
+    floatingDiv.style.padding = '10px';
+    floatingDiv.style.background = '#fff';
+    floatingDiv.style.border = '1px solid #ccc';
+    floatingDiv.style.borderRadius = '5px';
+    floatingDiv.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)';
+    floatingDiv.style.zIndex = '9999';
+    floatingDiv.style.display = 'none';
+    document.body.appendChild(floatingDiv);
+
+   // 监听文本选中事件
+let selectionTimeout;
+document.addEventListener('selectionchange', () => {
+    clearTimeout(selectionTimeout);
+    selectionTimeout = setTimeout(() => {
+        const selection = window.getSelection();
+        let selectedText = selection.toString().trim();
+        selectedText = selectedText.replace(/,$/, ''); // 去除选定文本末尾的逗号
+        if (selectedText) {
+            const selectedWords = selectedText.split(/,\s*/); // 使用逗号和可能的空格进行分词
+            const selectedIDs = [];
+            allLinks.forEach(link => {
+                const linkText = link.textContent.trim().replace(/,$/, ''); // 去除链接文本末尾的逗号
+                // 检查链接文本是否包含选中的任何一个分词
+                if (selectedWords.some(word => linkText.includes(word))) {
+                    const id = link.href.match(/\d+/)[0];
+                    selectedIDs.push(id);
+                }
+            });
+            if (selectedIDs.length > 0) {
+                showFloatingDiv(selectedIDs);
+            }
+        } else {
+            hideFloatingDiv();
+        }
+    }, 500); // 等待500毫秒
+});
+// 显示浮动窗口
+function showFloatingDiv(ids) {
+    floatingDiv.innerHTML = ''; // 清空浮动窗口内容
+    const uniqueIDs = [...new Set(ids)]; // 使用 Set 来获取唯一的 ID
+    uniqueIDs.forEach(id => {
+        const itemDiv = document.createElement('div');
+        itemDiv.textContent = id + ',';
+        floatingDiv.appendChild(itemDiv);
+    });
+    floatingDiv.style.display = 'block';
+
+    // 添加点击事件监听器
+    floatingDiv.addEventListener('click', () => {
+        copyAllToClipboard(uniqueIDs);
+    });
+}
+
+// 复制全部文本到剪贴板，并隐藏浮动窗口
+function copyAllToClipboard(ids) {
+    const clipboardText = ids.join(',');
+    navigator.clipboard.writeText(clipboardText)
+        .then(() => {
+            console.log('Copied to clipboard:', clipboardText);
+            hideFloatingDiv(); // 复制完成后隐藏悬浮框
+        })
+        .catch(err => console.error('Failed to copy to clipboard:', err));
+}
+
+// 隐藏浮动窗口
+function hideFloatingDiv() {
+    floatingDiv.style.display = 'none';
+}
+
 
 })();
