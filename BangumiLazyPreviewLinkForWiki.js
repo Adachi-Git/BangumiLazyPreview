@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BangumiLazyPreviewLinkForWiki
 // @namespace    https://github.com/Adachi-Git/BangumiLazyPreviewLink
-// @version      0.5
+// @version      0.6
 // @description  Lazy load links and show their titles
 // @author       Jirehlov (Original Author), Adachi (Current Author)
 // @include      /^https?://(bangumi\.tv|bgm\.tv|chii\.in)/.*
@@ -12,6 +12,31 @@
 
 (function () {
     'use strict';
+
+    // 删除可视区域内的零宽空格字符
+    function removeZeroWidthSpacesInView() {
+        document.querySelectorAll('*').forEach(element => {
+            const rect = element.getBoundingClientRect();
+            // 检查元素是否在可视区域内
+            if (rect.top >= 0 && rect.bottom <= window.innerHeight) {
+                element.childNodes.forEach(node => {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        node.textContent = node.textContent.replace(/\u200B/g, ''); // 替换零宽空格字符
+                    }
+                });
+            }
+        });
+    }
+
+    // 在滚动事件中调用删除零宽空格字符的函数
+    window.addEventListener('scroll', () => {
+        removeZeroWidthSpacesInView();
+    });
+
+    // 在页面加载完成后也调用一次，以处理初始状态
+    window.addEventListener('load', () => {
+        removeZeroWidthSpacesInView();
+    });
 
     let lazyLinks = []; // 存储需要懒加载处理的链接
     let linkCache = {}; // 存储链接和对应的标题
