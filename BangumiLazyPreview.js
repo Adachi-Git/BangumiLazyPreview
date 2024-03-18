@@ -7,28 +7,28 @@
 // @include        /^https?://(bangumi\.tv|bgm\.tv|chii\.in)/.*
 // @grant        none
 // @license      MIT
-// @downloadURL  https://update.greasyfork.org/scripts/487090/BangumiLazyPreviewLink.user.js
-// @updateURL    https://update.greasyfork.org/scripts/487090/BangumiLazyPreviewLink.meta.js
 // ==/UserScript==
-
 (function () {
-    'use strict';
+    "use strict";
 
-    let lazyLinks = [];
-    let linkCache = {}; // 存储链接和对应的标题缓存
-
+    // 替换链接文本为链接指向页面的标题
     const replaceLinkText = (link) => {
-        const linkURL = link.href;
-        if (linkCache[linkURL]) { // 检查链接是否在缓存中
-            link.textContent = linkCache[linkURL];
-        } else if (link.textContent === link.href) {
+        let linkURL = link.href;
+        if (window.location.href.includes('bangumi.tv')) {
+            linkURL = linkURL.replace('bgm.tv', 'bangumi.tv'); // 将链接中的 bgm.tv 替换为 bangumi.tv
+        } else if (window.location.href.includes('chii.in')) {
+            linkURL = linkURL.replace(/bangumi\.tv|bgm\.tv/, 'chii.in'); // 将链接中的 bangumi.tv 或 bgm.tv 替换为 chii.in
+        }
+        if (link.textContent === link.href) {
             fetch(linkURL)
                 .then(response => response.text())
                 .then(data => {
                     const parser = new DOMParser();
                     const htmlDoc = parser.parseFromString(data, 'text/html');
                     const title = htmlDoc.querySelector('h1.nameSingle a');
+                    const blogtitle = htmlDoc.querySelector('h1');
                     let titleText = title ? title.textContent : '';
+                    let blogtitleText = blogtitle ? blogtitle.textContent : '';
                     if (link.href.includes('subject') || link.href.includes('ep')) {
                         const chineseName = title ? title.getAttribute('title') : '';
                         if (chineseName) {
@@ -53,9 +53,11 @@
                             }
                         }
                     }
+                    if ((link.href.includes('blog') || link.href.includes('topic') || link.href.includes('index')) && blogtitleText) {
+                        titleText = blogtitleText;
+                    }
                     if (titleText) {
                         link.textContent = titleText;
-                        linkCache[linkURL] = titleText; // 将链接和标题添加到缓存中
                     }
                 })
                 .catch(error => {
@@ -63,6 +65,14 @@
                 });
         }
     };
+
+    // 获取页面上的所有链接
+    const allLinks = document.querySelectorAll('a[href^="https://bgm.tv/subject/"], a[href^="https://chii.in/subject/"], a[href^="https://bangumi.tv/subject/"], a[href^="https://bgm.tv/ep/"], a[href^="https://chii.in/ep/"], a[href^="https://bangumi.tv/ep/"], a[href^="https://bgm.tv/character/"], a[href^="https://chii.in/character/"], a[href^="https://bangumi.tv/character/"], a[href^="https://bgm.tv/person/"], a[href^="https://chii.in/person/"], a[href^="https://bangumi.tv/person/"], a[href^="https://bgm.tv/blog/"], a[href^="https://chii.in/blog/"], a[href^="https://bangumi.tv/blog/"], a[href^="https://bgm.tv/group/topic/"], a[href^="https://chii.in/group/topic/"], a[href^="https://bangumi.tv/group/topic/"], a[href^="https://bgm.tv/index/"], a[href^="https://chii.in/index/"], a[href^="https://bangumi.tv/index/"]');
+
+    // 设置定时器变量
+    let timer;
+
+    let lazyLinks = Array.from(allLinks);
 
     const lazyLoadLinks = () => {
         lazyLinks.forEach(link => {
@@ -86,10 +96,6 @@
         timer = setTimeout(lazyLoadLinks, 200); // 等待200毫秒
     });
 
-    // 获取页面上的所有链接
-    const allLinks = document.querySelectorAll('a[href^="https://bgm.tv/subject/"], a[href^="https://chii.in/subject/"], a[href^="https://bangumi.tv/subject/"], a[href^="https://bgm.tv/ep/"], a[href^="https://chii.in/ep/"], a[href^="https://bangumi.tv/ep/"], a[href^="https://bgm.tv/character/"], a[href^="https://chii.in/character/"], a[href^="https://bangumi.tv/character/"], a[href^="https://bgm.tv/person/"], a[href^="https://chii.in/person/"], a[href^="https://bangumi.tv/person/"]');
-
-    // 设置定时器变量
-    let timer;
-
+    // 页面加载完成时立即执行一次懒加载
+    window.addEventListener('DOMContentLoaded', lazyLoadLinks);
 })();
