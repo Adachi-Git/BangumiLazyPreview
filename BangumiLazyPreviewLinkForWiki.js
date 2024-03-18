@@ -42,57 +42,63 @@
     let linkCache = {}; // 存储链接和对应的标题
 
     // 替换链接文本为链接指向页面的标题
-    const replaceLinkText = (link) => {
-        const linkURL = link.href.replace('bgm.tv', 'bangumi.tv'); // 替换链接中的 bgm.tv 为 bangumi.tv
-        if (link.textContent === link.href) { // 检查链接的文本内容是否与链接地址相同
-            if (linkCache[linkURL]) { // 检查链接是否在缓存中
-                link.textContent = linkCache[linkURL] + ','; // 如果在缓存中，直接从缓存中获取标题
-            } else {
-                fetch(linkURL)
-                    .then(response => response.text())
-                    .then(data => {
-                        const parser = new DOMParser();
-                        const htmlDoc = parser.parseFromString(data, 'text/html');
-                        const title = htmlDoc.querySelector('h1.nameSingle a');
-                        let titleText = title ? title.textContent : '';
-                        // 检查链接是否指向主题或剧集，并添加中文标题
-                        if (link.href.includes('subject') || link.href.includes('ep')) {
-                            const chineseName = title ? title.getAttribute('title') : '';
-                            if (chineseName) {
+   const replaceLinkText = (link) => {
+    let linkURL = link.href;
+    if (window.location.href.includes('bangumi.tv')) {
+        linkURL = linkURL.replace('bgm.tv', 'bangumi.tv'); // 将链接中的 bgm.tv 替换为 bangumi.tv
+    } else if (window.location.href.includes('chii.in')) {
+        linkURL = linkURL.replace(/bangumi\.tv|bgm\.tv/, 'chii.in'); // 将链接中的 bangumi.tv 或 bgm.tv 替换为 chii.in
+    }
+
+    if (link.textContent === link.href) { // 检查链接的文本内容是否与链接地址相同
+        if (linkCache[linkURL]) { // 检查链接是否在缓存中
+            link.textContent = linkCache[linkURL] + ','; // 如果在缓存中，直接从缓存中获取标题
+        } else {
+            fetch(linkURL)
+                .then(response => response.text())
+                .then(data => {
+                    const parser = new DOMParser();
+                    const htmlDoc = parser.parseFromString(data, 'text/html');
+                    const title = htmlDoc.querySelector('h1.nameSingle a');
+                    let titleText = title ? title.textContent : '';
+                    // 检查链接是否指向主题或剧集，并添加中文标题
+                    if (link.href.includes('subject') || link.href.includes('ep')) {
+                        const chineseName = title ? title.getAttribute('title') : '';
+                        if (chineseName) {
+                            if (titleText) {
+                                titleText += ' | ' + chineseName;
+                            } else {
+                                titleText = chineseName;
+                            }
+                        }
+                    }
+                    // 检查链接是否指向剧集，并添加剧集标题
+                    if (link.href.includes('ep')) {
+                        const epTitle = htmlDoc.querySelector('h2.title');
+                        if (epTitle) {
+                            epTitle.querySelectorAll('small').forEach(small => small.remove());
+                            const epTitleText = epTitle.textContent;
+                            if (epTitleText) {
                                 if (titleText) {
-                                    titleText += ' | ' + chineseName;
+                                    titleText += ' | ' + epTitleText;
                                 } else {
-                                    titleText = chineseName;
+                                    titleText = epTitleText;
                                 }
                             }
                         }
-                        // 检查链接是否指向剧集，并添加剧集标题
-                        if (link.href.includes('ep')) {
-                            const epTitle = htmlDoc.querySelector('h2.title');
-                            if (epTitle) {
-                                epTitle.querySelectorAll('small').forEach(small => small.remove());
-                                const epTitleText = epTitle.textContent;
-                                if (epTitleText) {
-                                    if (titleText) {
-                                        titleText += ' | ' + epTitleText;
-                                    } else {
-                                        titleText = epTitleText;
-                                    }
-                                }
-                            }
-                        }
-                        // 如果存在标题文本，则将其设置为链接文本，并在后面添加逗号
-                        if (titleText) {
-                            link.textContent = titleText + ',';
-                            linkCache[linkURL] = titleText; // 将链接和标题添加到缓存中
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching data:', error);
-                    });
-            }
+                    }
+                    // 如果存在标题文本，则将其设置为链接文本，并在后面添加逗号
+                    if (titleText) {
+                        link.textContent = titleText + ',';
+                        linkCache[linkURL] = titleText; // 将链接和标题添加到缓存中
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
         }
-    };
+    }
+};
 
     const lazyLoadLinks = () => {
         lazyLinks.forEach(link => {
