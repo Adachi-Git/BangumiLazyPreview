@@ -4,6 +4,8 @@ BangumiLazyPreviewLink 是一个用户脚本，用于在 Bangumi 网站上预览
 
 本脚本分普通版和维基版。正常用户使用普通版即可，维基版面向维基人。
 
+https://cdn.jsdelivr.net/gh/Adachi-Git/BangumiLazyPreviewLink/BGMindexedDB_data.rar
+
 ## 功能特点
 - 仅在 Bangumi 网站上生效
 - 自动获取链接指向页面的标题，并显示在链接文本中
